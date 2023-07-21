@@ -206,31 +206,31 @@ function set_figures(){
 
 //Generate possible moves for the clicked figure
 //-----------------------------------------------------------------------------
-function generate_possible_moves(index){
+async function generate_possible_moves(index){
     remove_possible_moves_indicators()
     switch(playing_board[index].slice(1)){
         case "r":
-            get_possible_moves_for_rook(index)
+            await get_possible_moves_for_rook(index)
             show_possible_moves_indicator()
             break
         case "kn":
-            get_possible_moves_for_knight(index)
+            await get_possible_moves_for_knight(index)
             show_possible_moves_indicator()
             break
         case "b":
-            get_possible_moves_for_bishop(index)
+            await get_possible_moves_for_bishop(index)
             show_possible_moves_indicator()
             break
         case "q":
-            get_possible_moves_for_queen(index)
+            await get_possible_moves_for_queen(index)
             show_possible_moves_indicator()
             break
         case "k":
-            get_possible_moves_for_king(index)
+            await get_possible_moves_for_king(index)
             show_possible_moves_indicator()
             break
         case "p":
-            get_possible_moves_for_pawn(index)
+            await get_possible_moves_for_pawn(index)
             show_possible_moves_indicator()
             break
     }
@@ -259,72 +259,50 @@ function remove_possible_moves_indicators(){
 
 //Possible moves for the rook
 //-------------------------------------------------------------------------------------
-function get_possible_moves_for_rook(index){
+async function get_possible_moves_for_rook(index){
     possible_moves = []
     let x_directions = [0, 1, 0, -1]
     let y_directions = [-1, 0, 1, 0]
+    let promises = []
     for(let i = 0; i < 4; i++){
-        check_directions(index, x_directions, y_directions, i)
+        promises.push(check_directions(index, x_directions, y_directions, i))
     }
+    
+    await Promise.all(promises)
 }
 //Possible moves for the pawn
 //-------------------------------------------------------------------------------------
-function get_possible_moves_for_pawn(index){
+async function get_possible_moves_for_pawn(index){
     possible_moves = []
     let y_direction = white_playing ? -1 : 1;
     let starting_positions = white_playing ? [48,49,50,51,52,53,54,55] : [8,9,10,11,12,13,14,15] 
     if(playing_board[index + y_direction * 8] == "x"){
-        if(!checked){
-            if(!test_the_field_on_moving(index + y_direction * 8, index, get_current_player() + "r")){
-                possible_moves.push(index + y_direction * 8)
-                if(starting_positions.includes(index))
-                    if(playing_board[index + 2 * y_direction * 8] == "x")
-                        possible_moves.push(index + 2 * y_direction * 8)
-            }
-        }
-        else
-            test_the_field(index + y_direction * 8, index, get_current_player() + "p")
+        if(!await test_the_field(index + y_direction * 8, index, get_current_player() + "p"))
+            if(starting_positions.includes(index))
+                if(playing_board[index + 2 * y_direction * 8] == "x")
+                    possible_moves.push(index + 2 * y_direction * 8)
     }
     if(playing_board[index + y_direction * 8 + 1][0] == get_opponent_player()){
-        if(!checked){
-            if(!test_the_field_on_moving(index + y_direction * 8 + 1, index, get_current_player() + "r"))
-                possible_moves.push(index + y_direction * 8 + 1)
-        }
-        else
-            test_the_field(index + y_direction * 8 + 1, index, get_current_player() + "p")
+        await test_the_field(index + y_direction * 8 + 1, index, get_current_player() + "p")
     }
     if(playing_board[index + y_direction * 8 - 1][0] == get_opponent_player()){
-        if(!checked){
-            if(!test_the_field_on_moving(index + y_direction * 8 + 1, index, get_current_player() + "r"))
-                possible_moves.push(index + y_direction * 8 - 1)
-        }
-        else
-            test_the_field(index + y_direction * 8 - 1, index, get_current_player() + "p")
+        await test_the_field(index + y_direction * 8 - 1, index, get_current_player() + "p")
     }
 
 }
 //Possible moves for the knight 
 //-------------------------------------------------------------------------------------
-function get_possible_moves_for_knight(index){
+async function get_possible_moves_for_knight(index){
     possible_moves = []
     let x_directions = [1, 2, 2, 1, -1, -2, -2, -1]
     let y_directions = [2, 1, -1, -2, -2, -1, 1, 2]
     
     for(let i = 0; i < 8; i++){
-        if(!checked){
-            if(test_the_field_on_moving(index + x_directions[i] + y_directions[i] * 8, index, get_current_player() + "r"))
-                return
-        }
         let current_position = index
         current_position += x_directions[i] + y_directions[i] * 8
         if(check_knight(current_position, x_directions, i) || current_position < 0 || current_position > 63 || playing_board[current_position][0] == get_current_player())
             continue
-        if(checked){
-            test_the_field(current_position, index, get_current_player())
-        }
-        else{
-            possible_moves.push(current_position) 
-        }
+        await test_the_field(current_position, index, get_current_player())
     }
 }
 
@@ -343,29 +321,35 @@ function knight_went_off_right(current_position, x_directions, i){
 
 //Possible moves for a bishop
 //----------------------------------------------------------------------------------------
-function get_possible_moves_for_bishop(index){
+async function get_possible_moves_for_bishop(index){
     possible_moves = []
     let x_directions = [1, -1, -1, 1]
     let y_directions = [1, 1, -1, -1]
+    let promises = []
     for(let i = 0; i < 4; i++){
-        check_directions(index, x_directions, y_directions, i)
+        promises.push(check_directions(index, x_directions, y_directions, i))
     }
+    
+    await Promise.all(promises)
 }
 
 //Possible moves for a queen
 //----------------------------------------------------------------------------------------
-function get_possible_moves_for_queen(index){
+async function get_possible_moves_for_queen(index){
     possible_moves = []
     let x_directions = [1,1,1,0,-1,-1,-1,0]
     let y_directions = [-1,0,1,1,1,0,-1,-1]
+    let promises = []
     for(let i = 0; i < 8; i++){
-        check_directions(index, x_directions, y_directions, i)
+        promises.push(check_directions(index, x_directions, y_directions, i))
     }
+    
+    await Promise.all(promises)
 }
 
 //Possible moves for a king
 //----------------------------------------------------------------------------------------
-function get_possible_moves_for_king(index){
+async function get_possible_moves_for_king(index){
     possible_moves = []
     let x_directions = [1,1,1,0,-1,-1,-1,0]
     let y_directions = [-1,0,1,1,1,0,-1,-1]
@@ -380,23 +364,16 @@ function get_possible_moves_for_king(index){
 }
 
 //Queen, rook, and bishop have the same direction loop
-function check_directions(current_position, x_directions, y_directions, i){
+async function check_directions(current_position, x_directions, y_directions, i){
     let index = current_position
-    if(!checked){
-        if(test_the_field_on_moving(current_position + x_directions[i] + y_directions[i] * 8, current_position, get_current_player() + "r"))
-            return
-    }
     do{
         current_position += x_directions[i]
         current_position += y_directions[i] * 8
         if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
             break
-        if(checked){
-            test_the_field(current_position, index, get_current_player())
-        }
-        else{
-            possible_moves.push(current_position)
-        }
+
+        await test_the_field(current_position, index, get_current_player())
+  
         if(playing_board[current_position][0] == get_opponent_player()){
             break
         }
@@ -499,27 +476,16 @@ function check_directions_for_check(opponent_color, current_player_color, x_dire
     return false
 }
 
-
-function test_the_field(current_position, previous_position, figure){
+//This function checks if a move will lead to a check or stop the check
+async function test_the_field(current_position, previous_position, figure){
     let current_temp = playing_board[current_position]
     let previous_temp = playing_board[previous_position]
+    let is_checked = true
     playing_board[current_position] = figure
     playing_board[previous_position] = "x"
     if(!under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
         possible_moves.push(current_position)
-    }
-    playing_board[current_position] = current_temp
-    playing_board[previous_position] = previous_temp
-}
-
-function test_the_field_on_moving(current_position, previous_position, figure){
-    let current_temp = playing_board[current_position]
-    let previous_temp = playing_board[previous_position]
-    let is_checked = false
-    playing_board[current_position] = figure
-    playing_board[previous_position] = "x"
-    if(under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
-        is_checked = true
+        is_checked = false
     }
     playing_board[current_position] = current_temp
     playing_board[previous_position] = previous_temp
