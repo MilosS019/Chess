@@ -4,6 +4,7 @@ let last_selected_field_index = null
 let selected_field_index = null
 let playing_board = []
 let possible_moves = []
+let checked = false
 
 function generate_board(){
     let board = document.getElementById("board")
@@ -86,9 +87,12 @@ async function move_piece(){
     remove_possible_moves_indicators()
     playing_board[selected_field_index] = playing_board[last_selected_field_index]
     playing_board[last_selected_field_index] = "x"
+    if(under_check(get_current_player() + "k", playing_board.indexOf(get_current_player() + "k")))
+        checked = true
 }
 
 function change_players(){
+    checked = false
     white_playing = !white_playing;
 }
 
@@ -291,7 +295,17 @@ function get_possible_moves_for_knight(index){
         current_position += x_directions[i] + y_directions[i] * 8
         if(check_knight(current_position, x_directions, i) || current_position < 0 || current_position > 63 || playing_board[current_position][0] == get_current_player())
             continue
-        possible_moves.push(current_position) 
+        if(checked){
+            let temp = playing_board[current_position]
+            playing_board[current_position] = get_current_player()
+            if(!under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
+                possible_moves.push(current_position)
+            }
+            playing_board[current_position] = temp
+        }
+        else{
+            possible_moves.push(current_position) 
+        }
     }
 }
 
@@ -353,7 +367,17 @@ function check_directions(current_position, x_directions, y_directions, i){
         current_position += y_directions[i] * 8
         if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
             break
-        possible_moves.push(current_position)
+        if(checked){
+            let temp = playing_board[current_position]
+            playing_board[current_position] = get_current_player()
+            if(!under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
+                possible_moves.push(current_position)
+            }
+            playing_board[current_position] = temp
+        }
+        else{
+            possible_moves.push(current_position)
+        }
         if(playing_board[current_position][0] == get_opponent_player()){
             break
         }
