@@ -87,8 +87,10 @@ async function move_piece(){
     remove_possible_moves_indicators()
     playing_board[selected_field_index] = playing_board[last_selected_field_index]
     playing_board[last_selected_field_index] = "x"
-    if(under_check(get_current_player() + "k", playing_board.indexOf(get_current_player() + "k")))
+    if(under_check(get_current_player() + "k", playing_board.indexOf(get_current_player() + "k"))){
         checked = true
+        alert("You are under check")
+    }
 }
 
 function change_players(){
@@ -272,15 +274,33 @@ function get_possible_moves_for_pawn(index){
     let y_direction = white_playing ? -1 : 1;
     let starting_positions = white_playing ? [48,49,50,51,52,53,54,55] : [8,9,10,11,12,13,14,15] 
     if(playing_board[index + y_direction * 8] == "x"){
-        possible_moves.push(index + y_direction * 8)
-        if(starting_positions.includes(index))
-            if(playing_board[index + 2 * y_direction * 8] == "x")
-                possible_moves.push(index + 2 * y_direction * 8)
+        if(!checked){
+            if(!test_the_field_on_moving(index + y_direction * 8, index, get_current_player() + "r")){
+                possible_moves.push(index + y_direction * 8)
+                if(starting_positions.includes(index))
+                    if(playing_board[index + 2 * y_direction * 8] == "x")
+                        possible_moves.push(index + 2 * y_direction * 8)
+            }
+        }
+        else
+            test_the_field(index + y_direction * 8, index, get_current_player() + "p")
     }
-    if(playing_board[index + y_direction * 8 + 1][0] == get_opponent_player())
-        possible_moves.push(index + y_direction * 8 + 1)
-    if(playing_board[index + y_direction * 8 - 1][0] == get_opponent_player())
-        possible_moves.push(index + y_direction * 8 - 1)
+    if(playing_board[index + y_direction * 8 + 1][0] == get_opponent_player()){
+        if(!checked){
+            if(!test_the_field_on_moving(index + y_direction * 8 + 1, index, get_current_player() + "r"))
+                possible_moves.push(index + y_direction * 8 + 1)
+        }
+        else
+            test_the_field(index + y_direction * 8 + 1, index, get_current_player() + "p")
+    }
+    if(playing_board[index + y_direction * 8 - 1][0] == get_opponent_player()){
+        if(!checked){
+            if(!test_the_field_on_moving(index + y_direction * 8 + 1, index, get_current_player() + "r"))
+                possible_moves.push(index + y_direction * 8 - 1)
+        }
+        else
+            test_the_field(index + y_direction * 8 - 1, index, get_current_player() + "p")
+    }
 
 }
 //Possible moves for the knight 
@@ -291,17 +311,16 @@ function get_possible_moves_for_knight(index){
     let y_directions = [2, 1, -1, -2, -2, -1, 1, 2]
     
     for(let i = 0; i < 8; i++){
+        if(!checked){
+            if(test_the_field_on_moving(index + x_directions[i] + y_directions[i] * 8, index, get_current_player() + "r"))
+                return
+        }
         let current_position = index
         current_position += x_directions[i] + y_directions[i] * 8
         if(check_knight(current_position, x_directions, i) || current_position < 0 || current_position > 63 || playing_board[current_position][0] == get_current_player())
             continue
         if(checked){
-            let temp = playing_board[current_position]
-            playing_board[current_position] = get_current_player()
-            if(!under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
-                possible_moves.push(current_position)
-            }
-            playing_board[current_position] = temp
+            test_the_field(current_position, index, get_current_player())
         }
         else{
             possible_moves.push(current_position) 
@@ -362,18 +381,18 @@ function get_possible_moves_for_king(index){
 
 //Queen, rook, and bishop have the same direction loop
 function check_directions(current_position, x_directions, y_directions, i){
+    let index = current_position
+    if(!checked){
+        if(test_the_field_on_moving(current_position + x_directions[i] + y_directions[i] * 8, current_position, get_current_player() + "r"))
+            return
+    }
     do{
         current_position += x_directions[i]
         current_position += y_directions[i] * 8
         if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
             break
         if(checked){
-            let temp = playing_board[current_position]
-            playing_board[current_position] = get_current_player()
-            if(!under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
-                possible_moves.push(current_position)
-            }
-            playing_board[current_position] = temp
+            test_the_field(current_position, index, get_current_player())
         }
         else{
             possible_moves.push(current_position)
@@ -480,3 +499,29 @@ function check_directions_for_check(opponent_color, current_player_color, x_dire
     return false
 }
 
+
+function test_the_field(current_position, previous_position, figure){
+    let current_temp = playing_board[current_position]
+    let previous_temp = playing_board[previous_position]
+    playing_board[current_position] = figure
+    playing_board[previous_position] = "x"
+    if(!under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
+        possible_moves.push(current_position)
+    }
+    playing_board[current_position] = current_temp
+    playing_board[previous_position] = previous_temp
+}
+
+function test_the_field_on_moving(current_position, previous_position, figure){
+    let current_temp = playing_board[current_position]
+    let previous_temp = playing_board[previous_position]
+    let is_checked = false
+    playing_board[current_position] = figure
+    playing_board[previous_position] = "x"
+    if(under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
+        is_checked = true
+    }
+    playing_board[current_position] = current_temp
+    playing_board[previous_position] = previous_temp
+    return is_checked
+}
