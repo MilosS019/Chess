@@ -1,0 +1,99 @@
+html{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#board{
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto auto auto auto;
+    min-width: 650px;
+    min-height: 650px;
+}
+
+.field{
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.green{
+    background-color: rgb(57, 213, 106);
+}
+/*Possible move*/
+/*-----------------------------------------------------------------------------*/
+.possible_move{
+    background-image: url("images/possible_move.png");
+    background-size: 50%;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* background-size: cover; */
+}
+
+/*Black figures*/
+/*-----------------------------------------------------------------------------*/
+.black_pawn{
+    background-image: url("images/black_pawn.png");
+    background-size: cover;
+}
+
+.black_bishop{
+    background-image: url("images/black_bishop.png");
+    background-size: cover;
+}
+
+.black_king{
+    background-image: url("images/black_king.png");
+    background-size: cover;
+}
+
+.black_queen{
+    background-image: url("images/black_queen.png");
+    background-size: cover;
+}
+
+.black_knight{
+    background-image: url("images/black_knight.png");
+    background-size: cover;
+}
+
+.black_rook{
+    background-image: url("images/black_rook.png");
+    background-size: cover;
+}
+
+
+/*White figures*/
+/*-----------------------------------------------------------------------------*/
+
+.white_pawn{
+    background-image: url("images/white_pawn.png");
+    background-size: cover;
+}
+
+.white_bishop{
+    background-image: url("images/white_bishop.png");
+    background-size: cover;
+}
+
+.white_king{
+    background-image: url("images/white_king.png");
+    background-size: cover;
+}
+
+.white_queen{
+    background-image: url("images/white_queen.png");
+    background-size: cover;
+}
+
+.white_knight{
+    background-image: url("images/white_knight.png");
+    background-size: cover;
+}
+
+.white_rook{
+    background-image: url("images/white_rook.png");
+    background-size: cover;
+}
