@@ -89,7 +89,7 @@ async function move_piece(){
 }
 
 function change_players(){
-
+    white_playing = !white_playing;
 }
 
 async function change_figures_visually(){
@@ -248,6 +248,7 @@ function remove_possible_moves_indicators(){
     for(let index of possible_moves){
         fields[index].classList.remove("possible_move")
     }
+    possible_moves = []
 }
 
 //Possible moves for the rook
@@ -257,17 +258,7 @@ function get_possible_moves_for_rook(index){
     let x_directions = [0, 1, 0, -1]
     let y_directions = [-1, 0, 1, 0]
     for(let i = 0; i < 4; i++){
-        let current_position = index
-        do{
-            current_position += x_directions[i]
-            current_position += y_directions[i] * 8
-            if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
-                break
-            possible_moves.push(current_position)
-            if(playing_board[current_position][0] == get_opponent_player()){
-                break
-            }
-        } while(true);
+        check_directions(index, x_directions, y_directions, i)
     }
 }
 //Possible moves for the pawn
@@ -293,11 +284,11 @@ function get_possible_moves_for_pawn(index){
 function get_possible_moves_for_knight(index){
     possible_moves = []
     let x_directions = [1, 2, 2, 1, -1, -2, -2, -1]
-    let y_direction = [2, 1, -1, -2, -2, -1, 1, 2]
+    let y_directions = [2, 1, -1, -2, -2, -1, 1, 2]
     
     for(let i = 0; i < 8; i++){
         let current_position = index
-        current_position += x_directions[i] + y_direction[i] * 8
+        current_position += x_directions[i] + y_directions[i] * 8
         if(check_knight(current_position, x_directions, i) || current_position < 0 || current_position > 63 || playing_board[current_position][0] == get_current_player())
             continue
         possible_moves.push(current_position) 
@@ -310,12 +301,158 @@ function check_knight(current_position, x_directions, i){
 }
 
 function knight_went_off_left(current_position, x_directions, i){
-    return ((current_position + 1) % 8 == 0 && x_directions[i] < 0) || ((current_position + 2) % 8 == 0 && x_directions[i] < 0)
+    return ((current_position + 1) % 8 == 0 && x_directions[i] < 0) || ((current_position + 2) % 8 == 0 && x_directions[i] == -2)
 }
 
 function knight_went_off_right(current_position, x_directions, i){
-    return (current_position % 8 == 0 && x_directions[i] > 0) || ((current_position - 1) % 8 == 0 && x_directions[i] > 0)
+    return (current_position % 8 == 0 && x_directions[i] > 0) || ((current_position - 1) % 8 == 0 && x_directions[i] == 2)
+}
+
+//Possible moves for a bishop
+//----------------------------------------------------------------------------------------
+function get_possible_moves_for_bishop(index){
+    possible_moves = []
+    let x_directions = [1, -1, -1, 1]
+    let y_directions = [1, 1, -1, -1]
+    for(let i = 0; i < 4; i++){
+        check_directions(index, x_directions, y_directions, i)
+    }
+}
+
+//Possible moves for a queen
+//----------------------------------------------------------------------------------------
+function get_possible_moves_for_queen(index){
+    possible_moves = []
+    let x_directions = [1,1,1,0,-1,-1,-1,0]
+    let y_directions = [-1,0,1,1,1,0,-1,-1]
+    for(let i = 0; i < 8; i++){
+        check_directions(index, x_directions, y_directions, i)
+    }
+}
+
+//Possible moves for a king
+//----------------------------------------------------------------------------------------
+function get_possible_moves_for_king(index){
+    possible_moves = []
+    let x_directions = [1,1,1,0,-1,-1,-1,0]
+    let y_directions = [-1,0,1,1,1,0,-1,-1]
+    for(let i = 0; i < 8; i++){
+        let current_position = index
+        current_position += x_directions[i] + y_directions[i] * 8
+        if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
+            continue
+        if(!under_check(playing_board[index], current_position))
+            possible_moves.push(current_position)
+    }
+}
+
+//Queen, rook, and bishop have the same direction loop
+function check_directions(current_position, x_directions, y_directions, i){
+    do{
+        current_position += x_directions[i]
+        current_position += y_directions[i] * 8
+        if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
+            break
+        possible_moves.push(current_position)
+        if(playing_board[current_position][0] == get_opponent_player()){
+            break
+        }
+    } while(true);
 }
 
 
+//Check for checks
+//----------------------------------------------------------------------------------------
+//King is either wk or bk, without it we wouldnt know which king we are checking
+function under_check(king, king_index = -1){
+    if(king_index == -1)
+        king_index = playing_board.indexOf(king)
+    
+    if(check_pawns(king, king_index) || check_diagonals(king, king_index) || check_horizontals_and_verticals(king, king_index) || check_knights(king, king_index)){
+        return true
+    }
+    
+    return false
+}
+
+//Return true if king is under attack by pawns
+//----------------------------------------------------------------------------------------
+function check_pawns(king, king_index){
+    let y_direction = king[0] == "w" ? -1 : 1
+    let opponent_color = king[0] == "w" ? "b" : "w"
+    let x_directions = [-1, 1]
+    for(let i = 0; i < 2; i++){
+        let current_position = king_index + x_directions[i] + y_direction * 8
+        if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0)
+            continue
+        if(playing_board[current_position] == opponent_color + "p") 
+            return true
+    } 
+    return false
+}
+
+//Return true if king is under attack on a diagonal by a queen or a bishop
+//----------------------------------------------------------------------------------------
+function check_diagonals(king, king_index){
+    let opponent_color = king[0] == "w" ? "b" : "w"
+    let x_directions = [1, -1, -1, 1]
+    let y_directions = [1, 1, -1, -1]
+    for(let i = 0; i < 4; i++){
+        let check = check_directions_for_check(opponent_color, king[0], x_directions[i], y_directions[i], king_index, "b")  
+        if(check)
+            return true
+    }
+    return false
+}
+
+//Return true if king is under attack on a horizontal or vertical line by a queen or a rook
+//----------------------------------------------------------------------------------------
+function check_horizontals_and_verticals(king, king_index){
+    let opponent_color = king[0] == "w" ? "b" : "w"
+    let x_directions = [0, 1, 0, -1]
+    let y_directions = [-1, 0, 1, 0]
+    for(let i = 0; i < 4; i++){
+        let check = check_directions_for_check(opponent_color, king[0], x_directions[i], y_directions[i], king_index, "r")  
+        if(check)
+            return true
+    }
+    return false
+}
+
+//Return true if king is under attack by a knight
+//----------------------------------------------------------------------------------------
+function check_knights(king, king_index){
+    let opponent_color = king[0] == "w" ? "b" : "w"
+    let x_directions = [1, 2, 2, 1, -1, -2, -2, -1]
+    let y_directions = [2, 1, -1, -2, -2, -1, 1, 2]
+    for(let i = 0; i < 8; i++){
+        let current_position = king_index
+        current_position += x_directions[i] + y_directions[i] * 8
+        if(check_knight(current_position, x_directions, i) || current_position < 0 || current_position > 63 || playing_board[current_position][0] == king[0])
+            continue
+        if(playing_board[current_position] == opponent_color + "kn")
+            return true
+    }
+    return false
+}
+
+
+//Checks the full diagonal to see if any figures are pointing to that field
+//This is used for both diagonal, vertical and horizotnal search
+//----------------------------------------------------------------------------------------
+function check_directions_for_check(opponent_color, current_player_color, x_direction, y_direction, current_position, figure){
+    do{
+        current_position += x_direction
+        current_position += y_direction * 8
+        if(((current_position + 1) % 8 == 0 && x_direction == -1) || (current_position % 8 == 0 && x_direction == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == current_player_color)
+            break
+        if(playing_board[current_position][0] == opponent_color){
+            if(playing_board[current_position] == opponent_color + "q" || playing_board[current_position] == opponent_color + figure)
+                return true
+            return false
+        }
+    } while(true);
+
+    return false
+}
 

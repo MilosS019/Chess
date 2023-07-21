@@ -37,31 +37,38 @@ html{
 .black_pawn{
     background-image: url("images/black_pawn.png");
     background-size: cover;
+    cursor: pointer;
+    
 }
 
 .black_bishop{
     background-image: url("images/black_bishop.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .black_king{
     background-image: url("images/black_king.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .black_queen{
     background-image: url("images/black_queen.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .black_knight{
     background-image: url("images/black_knight.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .black_rook{
     background-image: url("images/black_rook.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 
@@ -71,29 +78,35 @@ html{
 .white_pawn{
     background-image: url("images/white_pawn.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .white_bishop{
     background-image: url("images/white_bishop.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .white_king{
     background-image: url("images/white_king.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .white_queen{
     background-image: url("images/white_queen.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .white_knight{
     background-image: url("images/white_knight.png");
     background-size: cover;
+    cursor: pointer;
 }
 
 .white_rook{
     background-image: url("images/white_rook.png");
     background-size: cover;
+    cursor: pointer;
 }
