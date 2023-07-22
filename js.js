@@ -15,6 +15,9 @@ let right_white_rook_moved = false
 let left_white_rook_moved = false
 let white_king_moved = false
 
+
+//Display and initial variable settings
+//---------------------------------------------------------------------------------
 async function generate_board(){
     let board = document.getElementById("board")
     let offset = 0
@@ -36,153 +39,6 @@ async function generate_board(){
     }
     await set_figures()
     await find_possible_moves()
-    console.log(possible_moves_obj)
-    console.log(playing_board)
-}
-//Ubaciti da se nakon menjanja poteza selected_field_index i last_... resetuju na null
-function add_on_click_event_listener(field){
-    field.addEventListener("click", () => {
-        let index = parseInt(field.id)
-        if(playing_board[index] == "x" && selected_field_index != null){
-            clicked_on_empty_field(index)
-        }
-        else if(playing_board[index] != "x"){
-            clicked_on_a_figure(index)
-        }
-    })
-}
-
-//If we clicked on an empty field and we have a piece selected, than play the move
-function clicked_on_empty_field(index){
-    if(!possible_moves_obj[selected_field_index].includes(index))
-        return
-    if(playing_board[index] == "x" && selected_field_index != null){
-        last_selected_field_index = selected_field_index
-        selected_field_index = index
-        move_piece()
-    }
-}
-
-//In case we clicked on a field that is not empty, if it's our piece, than select it, if its not our piece, play over it
-function clicked_on_a_figure(index){
-    if(playing_board[index][0] == get_current_player()){
-        selected_field_index = index
-        remove_possible_moves_indicators()
-        show_possible_moves_indicator(index)
-    }
-    else if(selected_field_index != null){
-        if(!possible_moves_obj[selected_field_index].includes(index))
-            return
-        last_selected_field_index = selected_field_index
-        selected_field_index = index
-        move_piece()
-    }
-}
-
-function get_current_player(){
-    if(white_playing)
-        return "w"
-    else
-        return "b"
-}
-
-function get_opponent_player(){
-    if(white_playing)
-        return "b"
-    else
-        return "w"
-}
-
-async function move_piece(){
-    await change_figures_visually()
-    remove_possible_moves_indicators()
-    //castling
-    if(playing_board[last_selected_field_index] == get_current_player() + "k" && Math.abs(last_selected_field_index - selected_field_index) > 1){
-        castle()
-    }
-    else{
-        playing_board[selected_field_index] = playing_board[last_selected_field_index]
-        playing_board[last_selected_field_index] = "x"
-    }
-    change_players()
-    selected_field_index = null
-    if( under_check(get_current_player() + "k", playing_board.indexOf(get_current_player() + "k"))){
-        checked = true
-        alert("You are under check")
-    }
-    still_able_to_castle()
-    await find_possible_moves()
-    if(await game_over())
-    alert(get_opponent_player() + " won")
-}
-
-function still_able_to_castle(){
-    if(get_opponent_player() == "w" && last_selected_field_index == 56)
-        left_white_rook_moved = true
-    if(get_opponent_player() == "w" && last_selected_field_index == 63)
-        right_white_rook_moved = true
-    if(get_opponent_player() == "w" && last_selected_field_index == 60)
-        white_king_moved = true
-    if(get_opponent_player() == "b" && last_selected_field_index == 0)
-        left_black_rook_moved = true
-    if(get_opponent_player() == "b" && last_selected_field_index == 7)
-        right_black_rook_moved = true
-    if(get_opponent_player() == "b" && last_selected_field_index == 4)
-        black_king_moved = true
-}
-
-function castle(){
-    let fields = document.getElementsByClassName("field")
-    playing_board[selected_field_index] = playing_board[last_selected_field_index]
-    playing_board[last_selected_field_index] = "x"
-    if(last_selected_field_index < selected_field_index){
-        let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index + 3)
-        fields[last_selected_field_index + 1].classList.add(playing_figure_class_name)
-        fields[last_selected_field_index + 3].classList.remove(playing_figure_class_name)
-        playing_board[last_selected_field_index + 1] = playing_board[last_selected_field_index + 3]
-        playing_board[last_selected_field_index + 3] = "x"
-    }
-    else{
-        let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index - 4)
-        fields[last_selected_field_index - 2].classList.add(playing_figure_class_name)
-        fields[last_selected_field_index - 4].classList.remove(playing_figure_class_name)
-        playing_board[last_selected_field_index - 2] = playing_board[last_selected_field_index - 4]
-        playing_board[last_selected_field_index - 4] = "x"    
-    }
-}
-
-async function game_over(){
-    for(let key in possible_moves_obj){
-        if(possible_moves_obj[key].length > 0)
-            return false
-    }
-    return true
-} 
-
-async function find_possible_moves(){
-    let current_player = get_current_player()
-    possible_moves_obj = {}
-    for(let i = 0; i < 64; i++){
-        if(playing_board[i][0] == current_player){
-            possible_moves_obj[i] = []
-            generate_possible_moves(i)
-        }
-    }
-}
-
-function change_players(){
-    checked = false
-    white_playing = !white_playing;
-}
-
-async function change_figures_visually(){
-    let fields = document.getElementsByClassName("field")
-    let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index)
-    let opponent_figure_class_name = get_class_name_by_figure_code(selected_field_index)
-    fields[selected_field_index].classList.add(playing_figure_class_name)
-    fields[last_selected_field_index].classList.remove(playing_figure_class_name)
-    if(opponent_figure_class_name != "")
-        fields[selected_field_index].classList.remove(opponent_figure_class_name)
 }
 
 function get_class_name_by_figure_code(index){
@@ -280,6 +136,191 @@ async function set_figures(){
         playing_board[i] = "wp"
     }
 }
+//-----------------------------------------------------------------------------------------
+
+//Event listeners
+//-----------------------------------------------------------------------------------------
+function add_on_click_event_listener(field){
+    field.addEventListener("click", () => {
+        let index = parseInt(field.id)
+        if(playing_board[index] == "x" && selected_field_index != null){
+            clicked_on_empty_field(index)
+        }
+        else if(playing_board[index] != "x"){
+            clicked_on_a_figure(index)
+        }
+    })
+}
+
+//If we clicked on an empty field and we have a piece selected, than play the move
+function clicked_on_empty_field(index){
+    if(!possible_moves_obj[selected_field_index].includes(index))
+        return
+    if(playing_board[index] == "x" && selected_field_index != null){
+        last_selected_field_index = selected_field_index
+        selected_field_index = index
+        move_piece()
+    }
+}
+
+//In case we clicked on a field that is not empty, if it's our piece, than select it, if its not our piece, play over it
+function clicked_on_a_figure(index){
+    if(playing_board[index][0] == get_current_player()){
+        selected_field_index = index
+        remove_possible_moves_indicators()
+        show_possible_moves_indicator(index)
+    }
+    else if(selected_field_index != null){
+        if(!possible_moves_obj[selected_field_index].includes(index))
+            return
+        last_selected_field_index = selected_field_index
+        selected_field_index = index
+        move_piece()
+    }
+}
+//-----------------------------------------------------------------------------------------
+
+
+function get_current_player(){
+    if(white_playing)
+        return "w"
+    else
+        return "b"
+}
+
+function get_opponent_player(){
+    if(white_playing)
+        return "b"
+    else
+        return "w"
+}
+
+//-----------------------------------------------------------------------------------------
+
+//Move the selected piece and update the board visually
+//-----------------------------------------------------------------------------------------
+async function move_piece(){
+    await change_figures_visually()
+    remove_possible_moves_indicators()
+    //castling
+    if(playing_board[last_selected_field_index] == get_current_player() + "k" && Math.abs(last_selected_field_index - selected_field_index) > 1){
+        castle()
+    }
+    else{
+        playing_board[selected_field_index] = playing_board[last_selected_field_index]
+        playing_board[last_selected_field_index] = "x"
+    }
+    change_players()
+    selected_field_index = null
+    if( under_check(get_current_player() + "k", playing_board.indexOf(get_current_player() + "k"))){
+        checked = true
+        alert("You are under check")
+    }
+    still_able_to_castle()
+    await find_possible_moves()
+    if(await game_over())
+    alert(get_opponent_player() + " won")
+}
+
+//Update the visuals on figure movement
+async function change_figures_visually(){
+    let fields = document.getElementsByClassName("field")
+    let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index)
+    let opponent_figure_class_name = get_class_name_by_figure_code(selected_field_index)
+    fields[selected_field_index].classList.add(playing_figure_class_name)
+    fields[last_selected_field_index].classList.remove(playing_figure_class_name)
+    if(opponent_figure_class_name != "")
+        fields[selected_field_index].classList.remove(opponent_figure_class_name)
+}
+
+//Display possible moves on the board
+function show_possible_moves_indicator(index){
+    if(possible_moves_obj[index].length == 0)
+        return
+    let fields = document.getElementsByClassName("field")
+    for(let i of possible_moves_obj[index]){
+        fields[i].classList.add("possible_move")
+        previously_added_possible_moves_indexes.push(i)
+    }
+}
+
+//Remove indications from the board
+function remove_possible_moves_indicators(){
+    if(previously_added_possible_moves_indexes.length == 0)
+        return
+    let fields = document.getElementsByClassName("field")
+    for(let index of previously_added_possible_moves_indexes){
+        fields[index].classList.remove("possible_move")
+    }
+    previously_added_possible_moves_indexes = []
+}
+
+//Checks if any of the figures required for castling have moved
+function still_able_to_castle(){
+    if(get_opponent_player() == "w" && last_selected_field_index == 56)
+        left_white_rook_moved = true
+    if(get_opponent_player() == "w" && last_selected_field_index == 63)
+        right_white_rook_moved = true
+    if(get_opponent_player() == "w" && last_selected_field_index == 60)
+        white_king_moved = true
+    if(get_opponent_player() == "b" && last_selected_field_index == 0)
+        left_black_rook_moved = true
+    if(get_opponent_player() == "b" && last_selected_field_index == 7)
+        right_black_rook_moved = true
+    if(get_opponent_player() == "b" && last_selected_field_index == 4)
+        black_king_moved = true
+}
+
+//Do the castling both visually and in our array
+function castle(){
+    let fields = document.getElementsByClassName("field")
+    playing_board[selected_field_index] = playing_board[last_selected_field_index]
+    playing_board[last_selected_field_index] = "x"
+    if(last_selected_field_index < selected_field_index){
+        let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index + 3)
+        fields[last_selected_field_index + 1].classList.add(playing_figure_class_name)
+        fields[last_selected_field_index + 3].classList.remove(playing_figure_class_name)
+        playing_board[last_selected_field_index + 1] = playing_board[last_selected_field_index + 3]
+        playing_board[last_selected_field_index + 3] = "x"
+    }
+    else{
+        let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index - 4)
+        fields[last_selected_field_index - 2].classList.add(playing_figure_class_name)
+        fields[last_selected_field_index - 4].classList.remove(playing_figure_class_name)
+        playing_board[last_selected_field_index - 2] = playing_board[last_selected_field_index - 4]
+        playing_board[last_selected_field_index - 4] = "x"    
+    }
+}
+//-----------------------------------------------------------------------------------------
+//Checks if the game is over
+async function game_over(){
+    for(let key in possible_moves_obj){
+        if(possible_moves_obj[key].length > 0)
+            return false
+    }
+    return true
+} 
+//-----------------------------------------------------------------------------------------
+
+//Find possible moves for all of the figures
+//-----------------------------------------------------------------------------------------
+async function find_possible_moves(){
+    let current_player = get_current_player()
+    possible_moves_obj = {}
+    for(let i = 0; i < 64; i++){
+        if(playing_board[i][0] == current_player){
+            possible_moves_obj[i] = []
+            generate_possible_moves(i)
+        }
+    }
+}
+
+function change_players(){
+    checked = false
+    white_playing = !white_playing;
+}
+
+
 
 //Generate possible moves for the clicked figure
 //-----------------------------------------------------------------------------
@@ -305,28 +346,6 @@ async function generate_possible_moves(index){
             await get_possible_moves_for_pawn(index)
             break
     }
-}
-
-//Display possible moves on the board
-function show_possible_moves_indicator(index){
-    if(possible_moves_obj[index].length == 0)
-        return
-    let fields = document.getElementsByClassName("field")
-    for(let i of possible_moves_obj[index]){
-        fields[i].classList.add("possible_move")
-        previously_added_possible_moves_indexes.push(i)
-    }
-}
-
-//Remove indications from the board
-function remove_possible_moves_indicators(){
-    if(previously_added_possible_moves_indexes.length == 0)
-        return
-    let fields = document.getElementsByClassName("field")
-    for(let index of previously_added_possible_moves_indexes){
-        fields[index].classList.remove("possible_move")
-    }
-    previously_added_possible_moves_indexes = []
 }
 
 //Possible moves for the rook
@@ -432,6 +451,25 @@ async function get_possible_moves_for_king(index){
     await able_to_castle_left(index)
 }
 
+//Queen, rook, and bishop have the same direction loop
+async function check_directions(current_position, x_directions, y_directions, i, figure){
+    let index = current_position
+    do{
+        current_position += x_directions[i]
+        current_position += y_directions[i] * 8
+        if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
+            break
+
+        await test_the_field(current_position, index, figure) 
+  
+        if(playing_board[current_position][0] == get_opponent_player()){
+            break
+        }
+    } while(true);
+}
+
+//Checks if the king can castle in any direction
+//----------------------------------------------------------------------------------------
 async function able_to_castle_right(index){
     if(get_current_player() == "w" && white_king_moved == false && right_white_rook_moved == false){
         if(playing_board[61] == "x" && playing_board[62] == "x"){
@@ -501,23 +539,7 @@ async function able_to_castle_left(index){
         }
     }
 }
-
-//Queen, rook, and bishop have the same direction loop
-async function check_directions(current_position, x_directions, y_directions, i, figure){
-    let index = current_position
-    do{
-        current_position += x_directions[i]
-        current_position += y_directions[i] * 8
-        if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
-            break
-
-        await test_the_field(current_position, index, figure) 
-  
-        if(playing_board[current_position][0] == get_opponent_player()){
-            break
-        }
-    } while(true);
-}
+//----------------------------------------------------------------------------------------
 
 
 //Check for checks
