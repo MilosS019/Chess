@@ -7,7 +7,15 @@ let possible_moves_obj = {}
 let previously_added_possible_moves_indexes = []
 let checked = false
 
-function generate_board(){
+let right_black_rook_moved = false
+let left_black_rook_moved = false
+let black_king_moved = false
+
+let right_white_rook_moved = false
+let left_white_rook_moved = false
+let white_king_moved = false
+
+async function generate_board(){
     let board = document.getElementById("board")
     let offset = 0
     let multiplier = 1
@@ -26,9 +34,10 @@ function generate_board(){
         add_on_click_event_listener(field)        
         board.appendChild(field)
     }
-
-    set_figures()
-    find_possible_moves()
+    await set_figures()
+    await find_possible_moves()
+    console.log(possible_moves_obj)
+    console.log(playing_board)
 }
 //Ubaciti da se nakon menjanja poteza selected_field_index i last_... resetuju na null
 function add_on_click_event_listener(field){
@@ -86,18 +95,60 @@ function get_opponent_player(){
 
 async function move_piece(){
     await change_figures_visually()
-    change_players()
     remove_possible_moves_indicators()
-    playing_board[selected_field_index] = playing_board[last_selected_field_index]
-    playing_board[last_selected_field_index] = "x"
+    //castling
+    if(playing_board[last_selected_field_index] == get_current_player() + "k" && Math.abs(last_selected_field_index - selected_field_index) > 1){
+        castle()
+    }
+    else{
+        playing_board[selected_field_index] = playing_board[last_selected_field_index]
+        playing_board[last_selected_field_index] = "x"
+    }
+    change_players()
     selected_field_index = null
-    if(under_check(get_current_player() + "k", playing_board.indexOf(get_current_player() + "k"))){
+    if( under_check(get_current_player() + "k", playing_board.indexOf(get_current_player() + "k"))){
         checked = true
         alert("You are under check")
     }
+    still_able_to_castle()
     await find_possible_moves()
     if(await game_over())
-        alert(get_opponent_player() + " won")
+    alert(get_opponent_player() + " won")
+}
+
+function still_able_to_castle(){
+    if(get_opponent_player() == "w" && last_selected_field_index == 56)
+        left_white_rook_moved = true
+    if(get_opponent_player() == "w" && last_selected_field_index == 63)
+        right_white_rook_moved = true
+    if(get_opponent_player() == "w" && last_selected_field_index == 60)
+        white_king_moved = true
+    if(get_opponent_player() == "b" && last_selected_field_index == 0)
+        left_black_rook_moved = true
+    if(get_opponent_player() == "b" && last_selected_field_index == 7)
+        right_black_rook_moved = true
+    if(get_opponent_player() == "b" && last_selected_field_index == 4)
+        black_king_moved = true
+}
+
+function castle(){
+    let fields = document.getElementsByClassName("field")
+    playing_board[selected_field_index] = playing_board[last_selected_field_index]
+    playing_board[last_selected_field_index] = "x"
+    if(last_selected_field_index < selected_field_index){
+        let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index + 3)
+        fields[last_selected_field_index + 1].classList.add(playing_figure_class_name)
+        fields[last_selected_field_index + 3].classList.remove(playing_figure_class_name)
+        playing_board[last_selected_field_index + 1] = playing_board[last_selected_field_index + 3]
+        playing_board[last_selected_field_index + 3] = "x"
+    }
+    else{
+        let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index - 4)
+        fields[last_selected_field_index - 2].classList.add(playing_figure_class_name)
+        fields[last_selected_field_index - 4].classList.remove(playing_figure_class_name)
+        playing_board[last_selected_field_index - 2] = playing_board[last_selected_field_index - 4]
+        playing_board[last_selected_field_index - 4] = "x"    
+    }
 }
 
 async function game_over(){
@@ -180,7 +231,7 @@ function get_class_name_by_figure_code(index){
     }
 }
 
-function set_figures(){
+async function set_figures(){
     let fields = document.getElementsByClassName("field")
     
     fields[0].classList.add("black_rook")
@@ -373,8 +424,81 @@ async function get_possible_moves_for_king(index){
         current_position += x_directions[i] + y_directions[i] * 8
         if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
             continue
-        if(!under_check(playing_board[index], current_position))
+        if(! under_check(playing_board[index], current_position))
             possible_moves_obj[index].push(current_position)
+    }
+
+    await able_to_castle_right(index)
+    await able_to_castle_left(index)
+}
+
+async function able_to_castle_right(index){
+    if(get_current_player() == "w" && white_king_moved == false && right_white_rook_moved == false){
+        if(playing_board[61] == "x" && playing_board[62] == "x"){
+            playing_board[60] = "x"
+            playing_board[61] = "wr"
+            playing_board[62] = "wk"
+            playing_board[63] = "x"
+            if(! under_check("wk", 62))
+                possible_moves_obj[index].push(62)
+            
+            playing_board[60] = "wk"
+            playing_board[61] = "x"
+            playing_board[62] = "x"
+            playing_board[63] = "wr"
+        }
+    }
+
+    else if(get_current_player() == "b" && black_king_moved == false && right_black_rook_moved == false){
+        if(playing_board[5] == "x" && playing_board[6] == "x"){
+            playing_board[4] = "x"
+            playing_board[5] = "br"
+            playing_board[6] = "bk"
+            playing_board[7] = "x"
+            if(! under_check("bk", 6))
+                possible_moves_obj[index].push(6)
+            playing_board[4] = "bk"
+            playing_board[5] = "x"
+            playing_board[6] = "x"
+            playing_board[7] = "br"    
+        }
+    }
+}
+
+
+async function able_to_castle_left(index){
+    if(get_current_player() == "w" && white_king_moved == false && left_white_rook_moved == false){
+        if(playing_board[57] == "x" && playing_board[58] == "x" && playing_board[59] == "x"){
+            playing_board[56] = "x"
+            playing_board[57] = "wk"
+            playing_board[58] = "wr"
+            playing_board[59] = "x"
+            playing_board[60] = "x"
+            if(! under_check("wk", 57))
+                possible_moves_obj[index].push(57)
+            playing_board[56] = "wr"
+            playing_board[57] = "x"
+            playing_board[58] = "x"
+            playing_board[59] = "x"
+            playing_board[60] = "wk"
+        }
+    }
+
+    else if(get_current_player() == "b" && black_king_moved == false && right_black_rook_moved == false){
+        if(playing_board[1] == "x" && playing_board[2] == "x" && playing_board[3] == "x"){
+            playing_board[0] = "x"
+            playing_board[1] = "bk"
+            playing_board[2] = "br"
+            playing_board[3] = "x"
+            playing_board[4] = "x"
+            if(! under_check("bk", 1))
+                possible_moves_obj[index].push(1)
+            playing_board[0] = "br"
+            playing_board[1] = "x"
+            playing_board[2] = "x"
+            playing_board[3] = "x"
+            playing_board[4] = "bk"
+        }
     }
 }
 
@@ -498,7 +622,7 @@ async function test_the_field(current_position, previous_position, figure){
     let is_checked = true
     playing_board[current_position] = figure
     playing_board[previous_position] = "x"
-    if(!under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
+    if(! under_check(get_current_player(), playing_board.indexOf(get_current_player() + "k"))){
         possible_moves_obj[previous_position].push(current_position)
         is_checked = false
     }
