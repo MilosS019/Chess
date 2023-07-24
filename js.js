@@ -336,14 +336,14 @@ function castle(){
     let fields = document.getElementsByClassName("field")
     playing_board[selected_field_index] = playing_board[last_selected_field_index]
     playing_board[last_selected_field_index] = "x"
-    if(last_selected_field_index < selected_field_index){
+    if(last_selected_field_index == selected_field_index - 2){
         let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index + 3)
         fields[last_selected_field_index + 1].classList.add(playing_figure_class_name)
         fields[last_selected_field_index + 3].classList.remove(playing_figure_class_name)
         playing_board[last_selected_field_index + 1] = playing_board[last_selected_field_index + 3]
         playing_board[last_selected_field_index + 3] = "x"
     }
-    else{
+    else if(last_selected_field_index  == selected_field_index + 3){
         let playing_figure_class_name = get_class_name_by_figure_code(last_selected_field_index - 4)
         fields[last_selected_field_index - 2].classList.add(playing_figure_class_name)
         fields[last_selected_field_index - 4].classList.remove(playing_figure_class_name)
