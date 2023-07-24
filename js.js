@@ -6,6 +6,7 @@ let playing_board = []
 let possible_moves_obj = {}
 let previously_added_possible_moves_indexes = []
 let checked = false
+let promoting = false
 
 let right_black_rook_moved = false
 let left_black_rook_moved = false
@@ -41,8 +42,11 @@ async function generate_board(){
     await find_possible_moves()
 }
 
-function get_class_name_by_figure_code(index){
-    switch(playing_board[index]){
+function get_class_name_by_figure_code(index, transform = true){
+    let name = index
+    if(transform)
+        name = playing_board[index]
+    switch(name){
         case "wp":
             return "white_pawn"
             break;
@@ -154,6 +158,8 @@ function add_on_click_event_listener(field){
 
 //If we clicked on an empty field and we have a piece selected, than play the move
 function clicked_on_empty_field(index){
+    if(promoting)
+        return
     if(!possible_moves_obj[selected_field_index].includes(index))
         return
     if(playing_board[index] == "x" && selected_field_index != null){
@@ -165,6 +171,8 @@ function clicked_on_empty_field(index){
 
 //In case we clicked on a field that is not empty, if it's our piece, than select it, if its not our piece, play over it
 function clicked_on_a_figure(index){
+    if(promoting)
+        return
     if(playing_board[index][0] == get_current_player()){
         selected_field_index = index
         remove_possible_moves_indicators()
@@ -203,6 +211,26 @@ async function move_piece(){
     await change_figures_visually()
     remove_possible_moves_indicators()
     //castling
+
+    if(await try_to_promote())
+        return
+    await play_the_move()
+}
+
+async function try_to_promote(){
+    if(playing_board[last_selected_field_index] == get_current_player() + "p"){
+        if(get_current_player() == "w" && selected_field_index >= 0 && selected_field_index < 8){
+            await show_promotion_grid()
+            return true
+        }
+        else if(get_current_player() == "b" && selected_field_index >= 56 && selected_field_index < 64){           
+            await show_promotion_grid()
+            return true
+        }
+    }
+}
+
+async function play_the_move(){
     if(playing_board[last_selected_field_index] == get_current_player() + "k" && Math.abs(last_selected_field_index - selected_field_index) > 1){
         castle()
     }
@@ -290,6 +318,56 @@ function castle(){
         playing_board[last_selected_field_index - 2] = playing_board[last_selected_field_index - 4]
         playing_board[last_selected_field_index - 4] = "x"    
     }
+}
+
+function promote(figure){
+    let fields = document.getElementsByClassName("field")
+    let playing_figure_class_name = get_class_name_by_figure_code(figure, false)
+    let pawn_class_name = get_class_name_by_figure_code(last_selected_field_index)
+    fields[selected_field_index].classList.add(playing_figure_class_name)
+    fields[last_selected_field_index].classList.remove(pawn_class_name)
+    playing_board[last_selected_field_index] = figure
+    hide_promotion_grid()
+    play_the_move()
+}
+
+async function show_promotion_grid(){
+    if(get_current_player() == "w")
+        await show_white_promotion_grid()
+    else
+        await show_black_promotion_grid()    
+}
+
+function hide_promotion_grid(){
+    if(get_current_player() == "w")
+        hide_white_promotion_grid()
+    else
+        hide_black_promotion_grid()    
+
+}
+
+async function show_white_promotion_grid(){
+    let promotion_grid = document.getElementById("promote_white")
+    promotion_grid.classList.remove("visibility_hidden_white")
+    promoting = true
+}
+
+async function show_black_promotion_grid(){
+    let promotion_grid = document.getElementById("promote_black")
+    promotion_grid.classList.remove("visibility_hidden_black")
+    promoting = true
+}
+
+async function hide_white_promotion_grid(){
+    let promotion_grid = document.getElementById("promote_white")
+    promotion_grid.classList.add("visibility_hidden_white")
+    promoting = false
+}
+
+async function hide_black_promotion_grid(){
+    let promotion_grid = document.getElementById("promote_black")
+    promotion_grid.classList.add("visibility_hidden_black")
+    promoting = false
 }
 //-----------------------------------------------------------------------------------------
 //Checks if the game is over
@@ -443,8 +521,15 @@ async function get_possible_moves_for_king(index){
         current_position += x_directions[i] + y_directions[i] * 8
         if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
             continue
-        if(! under_check(playing_board[index], index))
+        let temp = playing_board[current_position]
+        playing_board[current_position] = playing_board[index]
+        playing_board[index] = "" 
+        if(!under_check(playing_board[index], index))
             possible_moves_obj[index].push(current_position)
+        playing_board[index] = playing_board[current_position]
+        playing_board[current_position] = temp 
+        
+        
     }
     if(!checked){
         await able_to_castle_right(index)

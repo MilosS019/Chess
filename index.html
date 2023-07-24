@@ -8,8 +8,24 @@
     <script src="js.js"></script>
 </head>
 <body onload="generate_board()">
+    <div id="promote_white" class = "visibility_hidden_white">
+        <div class="promotion_field white_pawn" onclick="promote('wp')"></div>
+        <div class="promotion_field white_rook" onclick="promote('wr')"></div>
+        <div class="promotion_field white_queen" onclick="promote('wq')"></div>
+        <div class="promotion_field white_bishop" onclick="promote('wb')"></div>
+        <div class="promotion_field white_knight" onclick="promote('wkn')"></div>
+    </div>
+    <br>
     <div id="board">
-
+        
+    </div>
+    <br>
+    <div id="promote_black" class = "visibility_hidden_black">
+        <div class="promotion_field black_pawn" onclick="promote('bp')"></div>
+        <div class="promotion_field black_rook" onclick="promote('br')"></div>
+        <div class="promotion_field black_queen" onclick="promote('bq')"></div>
+        <div class="promotion_field black_bishop" onclick="promote('bb')"></div>
+        <div class="promotion_field black_knight" onclick="promote('bkn')"></div>
     </div>
 </body>
 </html>
