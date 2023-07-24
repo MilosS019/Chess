@@ -418,20 +418,18 @@ async function find_possible_moves(){
     let current_player = get_current_player()
     let opponent_player = get_opponent_player()
     possible_moves_obj = {}
-    promises = []
     score["w"] = 0
     score["b"] = 0
     for(let i = 0; i < 64; i++){
         if(playing_board[i][0] == current_player){
             possible_moves_obj[i] = []
-            promises.push(generate_possible_moves(i))
+            await generate_possible_moves(i)
             score[current_player] += get_figure_value(playing_board[i])
         }
         else if(playing_board[i][0] == opponent_player){
             score[opponent_player] += get_figure_value(playing_board[i])
         }
     }
-    await Promise.all(promises)
 }
 
 function get_figure_value(figure){
@@ -617,7 +615,7 @@ async function check_directions(current_position, x_directions, y_directions, i,
 //Checks if the king can castle in any direction
 //----------------------------------------------------------------------------------------
 async function able_to_castle_right(index){
-    if(get_current_player() == "w" && white_king_moved == false && right_white_rook_moved == false){
+    if(get_current_player() == "w" && white_king_moved == false && right_white_rook_moved == false && playing_board[63] == "wr"){
         if(playing_board[61] == "x" && playing_board[62] == "x"){
             playing_board[60] = "x"
             playing_board[61] = "wr"
@@ -633,7 +631,7 @@ async function able_to_castle_right(index){
         }
     }
 
-    else if(get_current_player() == "b" && black_king_moved == false && right_black_rook_moved == false){
+    else if(get_current_player() == "b" && black_king_moved == false && right_black_rook_moved == false && playing_board[7] == "br"){
         if(playing_board[5] == "x" && playing_board[6] == "x"){
             playing_board[4] = "x"
             playing_board[5] = "br"
@@ -651,7 +649,7 @@ async function able_to_castle_right(index){
 
 
 async function able_to_castle_left(index){
-    if(get_current_player() == "w" && white_king_moved == false && left_white_rook_moved == false){
+    if(get_current_player() == "w" && white_king_moved == false && left_white_rook_moved == false && playing_board[56] == "wr"){
         if(playing_board[57] == "x" && playing_board[58] == "x" && playing_board[59] == "x"){
             playing_board[56] = "x"
             playing_board[57] = "wk"
@@ -668,7 +666,7 @@ async function able_to_castle_left(index){
         }
     }
 
-    else if(get_current_player() == "b" && black_king_moved == false && right_black_rook_moved == false){
+    else if(get_current_player() == "b" && black_king_moved == false && right_black_rook_moved == false && playing_board[0] == "br"){
         if(playing_board[1] == "x" && playing_board[2] == "x" && playing_board[3] == "x"){
             playing_board[0] = "x"
             playing_board[1] = "bk"
