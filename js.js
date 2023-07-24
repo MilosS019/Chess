@@ -325,7 +325,7 @@ function promote(figure){
     let playing_figure_class_name = get_class_name_by_figure_code(figure, false)
     let pawn_class_name = get_class_name_by_figure_code(last_selected_field_index)
     fields[selected_field_index].classList.add(playing_figure_class_name)
-    fields[last_selected_field_index].classList.remove(pawn_class_name)
+    fields[selected_field_index].classList.remove(pawn_class_name)
     playing_board[last_selected_field_index] = figure
     hide_promotion_grid()
     play_the_move()
