@@ -443,12 +443,13 @@ async function get_possible_moves_for_king(index){
         current_position += x_directions[i] + y_directions[i] * 8
         if(((current_position + 1) % 8 == 0 && x_directions[i] == -1) || (current_position % 8 == 0 && x_directions[i] == 1) || current_position > 63 || current_position < 0 || playing_board[current_position][0] == get_current_player())
             continue
-        if(! under_check(playing_board[index], current_position))
+        if(! under_check(playing_board[index], index))
             possible_moves_obj[index].push(current_position)
     }
-
-    await able_to_castle_right(index)
-    await able_to_castle_left(index)
+    if(!checked){
+        await able_to_castle_right(index)
+        await able_to_castle_left(index)
+    }
 }
 
 //Queen, rook, and bishop have the same direction loop
