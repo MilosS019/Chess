@@ -3,6 +3,7 @@ body{
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    font-family: 'Rubik', sans-serif;
 }
 
 #board{
@@ -11,6 +12,52 @@ body{
     grid-template-rows: auto auto auto auto auto auto auto auto;
     min-width: 640px;
     min-height: 640px;
+    position: relative;
+}
+
+#white_score{
+    transform: translate(0, 25%);
+}
+#black_score{
+    transform: translate(0,-125%);
+}
+
+#white_score, #black_score{
+    width: 150px;
+    height: 50px;
+    position: absolute;
+    left: 101%;
+    top: 50%;
+}
+
+#white_score > p, #black_score > p{
+    padding: 0px;
+    margin: 0px;
+}
+
+#white_pieces, #black_pieces{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    display: inline-block;
+}
+
+#white_advantage, #black_advantage{
+    display: inline-block;
+    line-height: 25px;
+    margin: 0px 0px 0px 5px;
+}
+
+#flex_row{
+    display: flex;
+    flex: row;
+}
+
+
+.eaten_figure{
+    width: 25px;
+    height: 25px;
+    display: inline-block;
 }
 
 .field{
@@ -41,6 +88,11 @@ body{
 
 .visibility_hidden_white, .visibility_hidden_black{
     visibility: hidden;
+}
+
+.grid{
+    display: grid;
+    grid-template-columns: auto auto auto;
 }
 /*Possible move*/
 /*-----------------------------------------------------------------------------*/

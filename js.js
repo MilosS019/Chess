@@ -16,6 +16,8 @@ let right_white_rook_moved = false
 let left_white_rook_moved = false
 let white_king_moved = false
 
+let score = {"w":0, "b":0}
+
 
 //Display and initial variable settings
 //---------------------------------------------------------------------------------
@@ -183,6 +185,7 @@ function clicked_on_a_figure(index){
             return
         last_selected_field_index = selected_field_index
         selected_field_index = index
+        add_piece_to_eaten()
         move_piece()
     }
 }
@@ -210,11 +213,40 @@ function get_opponent_player(){
 async function move_piece(){
     await change_figures_visually()
     remove_possible_moves_indicators()
-    //castling
 
     if(await try_to_promote())
         return
     await play_the_move()
+    update_scores()
+}
+
+function update_scores(){
+    let black_score = document.getElementById("black_advantage")
+    let white_score = document.getElementById("white_advantage")
+    if(score["w"] > score["b"]){
+        white_score.innerHTML = " +" + (score["w"] - score["b"])
+        black_score.innerHTML = ""
+    }else if(score["b"] > score["w"]){
+        black_score.innerHTML = " +" + (score["b"] - score["w"])
+        white_score.innerHTML = ""
+    }
+    else{
+        black_score.innerHTML = ""
+        white_score.innerHTML = ""
+    }
+}
+
+function add_piece_to_eaten(){
+    let eaten_figures_container;
+    if(get_current_player() == "w")
+        eaten_figures_container = document.getElementById("black_pieces");
+    else
+        eaten_figures_container = document.getElementById("white_pieces");
+    
+    let eaten_figure_div = document.createElement("div");
+    eaten_figure_div.classList.add("eaten_figure")
+    eaten_figure_div.classList.add(get_class_name_by_figure_code(selected_field_index))
+    eaten_figures_container.appendChild(eaten_figure_div)
 }
 
 async function try_to_promote(){
@@ -384,12 +416,40 @@ async function game_over(){
 //-----------------------------------------------------------------------------------------
 async function find_possible_moves(){
     let current_player = get_current_player()
+    let opponent_player = get_opponent_player()
     possible_moves_obj = {}
+    promises = []
+    score["w"] = 0
+    score["b"] = 0
     for(let i = 0; i < 64; i++){
         if(playing_board[i][0] == current_player){
             possible_moves_obj[i] = []
-            generate_possible_moves(i)
+            promises.push(generate_possible_moves(i))
+            score[current_player] += get_figure_value(playing_board[i])
         }
+        else if(playing_board[i][0] == opponent_player){
+            score[opponent_player] += get_figure_value(playing_board[i])
+        }
+    }
+    await Promise.all(promises)
+}
+
+function get_figure_value(figure){
+    switch(figure.slice(1)){
+        case "p":
+            return 1;
+        case "b":
+            return 3;
+        case "q": 
+            return 8;
+        case "r":
+            return 5;
+        case "kn":
+            return 3
+        case "k":
+            return 0
+        default:
+            return 0
     }
 }
 
@@ -524,7 +584,7 @@ async function get_possible_moves_for_king(index){
         let temp = playing_board[current_position]
         playing_board[current_position] = playing_board[index]
         playing_board[index] = "" 
-        if(!under_check(playing_board[index], index))
+        if(!under_check(playing_board[current_position], current_position))
             possible_moves_obj[index].push(current_position)
         playing_board[index] = playing_board[current_position]
         playing_board[current_position] = temp 
